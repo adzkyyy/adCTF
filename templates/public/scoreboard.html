@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoreboard - adCTF</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation Bar -->
+    {% include 'components/navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-blue-600 mb-2">
+            Scoreboard
+        </h1>
+        <p class="text-xl text-gray-600">Live Attack-Defense Score Results</p>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 hidden" 
+         style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999;">
+        <div class="flex items-center justify-center h-full">
+            <div class="text-center text-white">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4 mx-auto"></div>
+                <p class="text-lg">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoreboard Table -->
+    <div id="scoreboardContainer" {% if not scoreboard_data %}class="hidden"{% endif %}>
+        <div class="bg-white rounded-lg shadow-lg border-0 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full scoreboard-table">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th scope="col" class="px-3 py-3 text-center border-r border-gray-600 w-20">Rank</th>
+                            <th scope="col" class="px-3 py-3 border-r border-gray-600 w-40">Team</th>
+                            <th scope="col" class="px-3 py-3 text-center border-r border-gray-600 w-24">Total</th>
+                            <th scope="col" class="px-3 py-3 text-center border-r border-gray-600 w-32">Attack / Defense</th>
+                            <th scope="col" class="px-3 py-3 text-center challenge-header" id="challengeHeaders">
+                                Challenge Details
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboardBody" class="divide-y divide-gray-200">
+                        {% for team_data in scoreboard_data %}
+                        <tr class="hover:bg-blue-50 {% if loop.index == 1 %}bg-yellow-50{% elif loop.index == 2 %}bg-gray-50{% elif loop.index == 3 %}bg-blue-50{% endif %}">
+                            <!-- Rank -->
+                            <td class="px-3 py-3 text-center border-r border-gray-200">
+                                <div class="flex items-center justify-center">
+                                    {% if loop.index == 1 %}
+                                        <i class="fas fa-trophy text-yellow-500 text-xl mr-1"></i>
+                                    {% elif loop.index == 2 %}
+                                        <i class="fas fa-trophy text-gray-500 text-xl mr-1"></i>
+                                    {% elif loop.index == 3 %}
+                                        <i class="fas fa-trophy text-blue-500 text-xl mr-1"></i>
+                                    {% else %}
+                                        <span class="font-bold">{{ loop.index }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <!-- Team Name -->
+                            <td class="px-3 py-3 border-r border-gray-200">
+                                <div class="font-bold text-blue-600">{{ team_data.username }}</div>
+                                <small class="text-gray-500">{{ team_data.host_ip }}</small>
+                            </td>
+                            
+                            <!-- Total Points -->
+                            <td class="px-3 py-3 text-center border-r border-gray-200">
+                                <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-600 text-white">{{ "%.0f"|format(team_data.total_points) }}</span>
+                            </td>
+                            
+                            <!-- Attack & Defense Points -->
+                            <td class="px-3 py-3 text-center border-r border-gray-200">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center justify-center">
+                                        <i class="fas fa-fire text-red-500 mr-1"></i>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">{{ team_data.attack_points }}</span>
+                                    </div>
+                                    <div class="flex items-center justify-center">
+                                        <i class="fas fa-shield-alt text-blue-500 mr-1"></i>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">{{ team_data.defense_points }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                                
+                            <!-- Challenge Details -->
+                            <td class="px-3 py-3 challenge-details">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                                    {% if team_data.attacks %}
+                                        {% for challenge_name, attack_points in team_data.attacks.items() %}
+                                        <div class="min-w-0">
+                                            <div class="bg-white border border-gray-300 rounded-lg overflow-hidden min-w-[120px]">
+                                                <div class="bg-gray-100 px-2 py-1 border-b border-gray-200">
+                                                    <small class="font-bold text-xs uppercase text-gray-700">{{ challenge_name }}</small>
+                                                </div>
+                                                <div class="p-2">
+                                                    <!-- Attack & Flags Captured -->
+                                                    <div class="flex justify-between mb-1">
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-fire text-red-500 mr-1 text-xs"></i>
+                                                            <small class="text-xs">{{ "%.0f"|format(attack_points) }}</small>
+                                                        </div>
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-flag text-green-500 mr-1 text-xs"></i>
+                                                            <small class="text-xs">{{ team_data.flags[challenge_name].captured if team_data.flags and team_data.flags[challenge_name] else 0 }}</small>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Defense & Flags Stolen -->
+                                                    <div class="flex justify-between mb-1">
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-shield-alt text-blue-500 mr-1 text-xs"></i>
+                                                            <small class="text-xs">{{ "%.0f"|format(team_data.defenses[challenge_name]) if team_data.defenses and team_data.defenses[challenge_name] else 0 }}</small>
+                                                        </div>
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-flag-checkered text-yellow-500 mr-1 text-xs"></i>
+                                                            <small class="text-xs">{{ team_data.flags[challenge_name].stolen if team_data.flags and team_data.flags[challenge_name] else 0 }}</small>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- SLA Status & Checks -->
+                                                    <div class="flex justify-between items-center pt-1 border-t border-gray-200">
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-check text-blue-400 mr-1 text-xs"></i>
+                                                            <small class="text-xs">{{ team_data.passed_checks[challenge_name] if team_data.passed_checks and team_data.passed_checks[challenge_name] else 0 }}/{{ team_data.total_checks[challenge_name] if team_data.total_checks and team_data.total_checks[challenge_name] else 0 }}</small>
+                                                        </div>
+                                                        <div>
+                                                            {% set sla_status = team_data.sla[challenge_name] if team_data.sla and team_data.sla[challenge_name] else 'UNKNOWN' %}
+                                                            {% if sla_status == 'UP' %}
+                                                                <i class="fas fa-arrow-up text-green-500 text-xs"></i>
+                                                            {% elif sla_status == 'DOWN' or sla_status == 'FAULTY' %}
+                                                                <i class="fas fa-arrow-down text-red-500 text-xs"></i>
+                                                            {% elif sla_status == 'DISABLED' %}
+                                                                <i class="fas fa-ban text-gray-500 text-xs"></i>
+                                                            {% else %}
+                                                                <i class="fas fa-question text-gray-400 text-xs"></i>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="flex justify-center mt-6">
+            <div class="bg-white border border-gray-300 rounded-lg">
+                <div class="p-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-fire text-red-500 mr-2"></i>
+                            <small class="text-gray-600">Attack Points</small>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt text-blue-500 mr-2"></i>
+                            <small class="text-gray-600">Defense Points</small>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-flag text-green-500 mr-2"></i>
+                            <small class="text-gray-600">Flags Captured</small>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-flag-checkered text-yellow-500 mr-2"></i>
+                            <small class="text-gray-600">Flags Stolen</small>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-blue-400 mr-2"></i>
+                            <small class="text-gray-600">SLA Checks</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Data Message -->
+    <div id="noDataMessage" {% if scoreboard_data %}class="hidden"{% endif %}>
+        <div class="text-center py-12">
+            <div class="empty-state">
+                <i class="fas fa-trophy text-6xl text-gray-400 mb-6"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-3">No data available</h3>
+                <p class="text-gray-500">The scoreboard will update when the competition begins.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    let refreshInterval;
+    
+    // Show loading overlay
+    function showLoading() {
+        $('#loadingOverlay').removeClass('hidden');
+    }
+    
+    // Hide loading overlay
+    function hideLoading() {
+        $('#loadingOverlay').addClass('hidden');
+    }
+    
+    // Fetch scoreboard data from API
+    async function fetchScoreboardData() {
+        try {
+            showLoading();
+            
+            const response = await $.ajax({
+                url: '/public/api/scoreboard',
+                method: 'GET',
+                dataType: 'json'
+            });
+            
+            if (response && response.length > 0) {
+                updateScoreboardTable(response);
+                $('#scoreboardContainer').removeClass('hidden');
+                // $('#statisticsRow').removeClass('hidden'); // Commented out since element doesn't exist
+                $('#noDataMessage').addClass('hidden');
+            } else {
+                $('#scoreboardContainer').addClass('hidden');
+                // $('#statisticsRow').addClass('hidden'); // Commented out since element doesn't exist
+                $('#noDataMessage').removeClass('hidden');
+            }
+            
+        } catch (error) {
+            console.error('Error fetching scoreboard data:', error);
+            // Show error message or keep existing data
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // Update scoreboard table with new data
+    function updateScoreboardTable(data) {
+        // Sort data by total points
+        const sortedData = data.sort((a, b) => b.total_points - a.total_points);
+        
+        // Extract unique challenge names
+        const challengeNames = new Set();
+        sortedData.forEach(team => {
+            if (team.attacks) {
+                Object.keys(team.attacks).forEach(challenge => challengeNames.add(challenge));
+            }
+        });
+        
+        // Update table headers if we have challenge data
+        if (challengeNames.size > 0) {
+            updateTableHeaders(Array.from(challengeNames));
+        }
+        
+        // Update table body
+        updateTableBody(sortedData, Array.from(challengeNames));
+        
+        // Update statistics
+        updateStatistics(sortedData);
+    }
+    
+    // Update table headers dynamically
+    function updateTableHeaders(challenges) {
+        const headerRow = $('#scoreboardContainer thead tr');
+        
+        // Remove existing challenge headers except the first 4 columns
+        headerRow.find('th:gt(3)').remove();
+        
+        // Add challenge headers
+        challenges.forEach(challenge => {
+            headerRow.append(`
+                <th scope="col" class="px-2 py-3 text-center border-r border-gray-600 challenge-header min-w-[140px]">
+                    ${challenge}
+                </th>
+            `);
+        });
+    }
+    
+    // Update table body with team data
+    function updateTableBody(teams, challenges) {
+        const tbody = $('#scoreboardBody');
+        tbody.empty();
+        
+        teams.forEach((team, index) => {
+            const rank = index + 1;
+            let rowClass = '';
+            let rankIcon = '';
+            
+            if (rank === 1) {
+                rowClass = 'bg-yellow-50 hover:bg-yellow-100';
+                rankIcon = '<i class="fas fa-trophy text-yellow-500 text-xl mr-1"></i>';
+            } else if (rank === 2) {
+                rowClass = 'bg-gray-50 hover:bg-gray-100';
+                rankIcon = '<i class="fas fa-trophy text-gray-500 text-xl mr-1"></i>';
+            } else if (rank === 3) {
+                rowClass = 'bg-blue-50 hover:bg-blue-100';
+                rankIcon = '<i class="fas fa-trophy text-blue-500 text-xl mr-1"></i>';
+            } else {
+                rowClass = 'hover:bg-blue-50';
+                rankIcon = `<span class="font-bold">${rank}</span>`;
+            }
+            
+            let challengeDetails = '';
+            challenges.forEach(challenge => {
+                const attackPoints = team.attacks && team.attacks[challenge] ? team.attacks[challenge].toFixed(0) : '0';
+                const defensePoints = team.defenses && team.defenses[challenge] ? team.defenses[challenge].toFixed(0) : '0';
+                const flagsCaptured = team.flags && team.flags[challenge] ? team.flags[challenge].captured || 0 : 0;
+                const flagsStolen = team.flags && team.flags[challenge] ? team.flags[challenge].stolen || 0 : 0;
+                const passedChecks = team.passed_checks && team.passed_checks[challenge] ? team.passed_checks[challenge] : 0;
+                const totalChecks = team.total_checks && team.total_checks[challenge] ? team.total_checks[challenge] : 0;
+                const slaStatus = team.sla && team.sla[challenge] ? team.sla[challenge] : 'UNKNOWN';
+                
+                let slaIcon = '';
+                switch(slaStatus) {
+                    case 'UP':
+                        slaIcon = '<i class="fas fa-arrow-up text-green-500 text-xs"></i>';
+                        break;
+                    case 'DOWN':
+                    case 'FAULTY':
+                        slaIcon = '<i class="fas fa-arrow-down text-red-500 text-xs"></i>';
+                        break;
+                    case 'DISABLED':
+                        slaIcon = '<i class="fas fa-ban text-gray-500 text-xs"></i>';
+                        break;
+                    default:
+                        slaIcon = '<i class="fas fa-question text-gray-400 text-xs"></i>';
+                }
+                
+                challengeDetails += `
+                    <td class="px-2 py-3 border-r border-gray-200 min-w-[140px]">
+                        <div class="bg-white border border-gray-300 rounded-lg overflow-hidden h-full">
+                            <div class="bg-gray-100 px-2 py-1 border-b border-gray-200">
+                                <small class="font-bold text-xs uppercase text-gray-700">${challenge}</small>
+                            </div>
+                            <div class="p-2">
+                                <div class="flex justify-between mb-1">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-fire text-red-500 mr-1 text-xs"></i>
+                                        <small class="text-xs">${attackPoints}</small>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-flag text-green-500 mr-1 text-xs"></i>
+                                        <small class="text-xs">${flagsCaptured}</small>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between mb-1">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-shield-alt text-blue-500 mr-1 text-xs"></i>
+                                        <small class="text-xs">${defensePoints}</small>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-flag-checkered text-yellow-500 mr-1 text-xs"></i>
+                                        <small class="text-xs">${flagsStolen}</small>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 border-t border-gray-200">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-check text-blue-400 mr-1 text-xs"></i>
+                                        <small class="text-xs">${passedChecks}/${totalChecks}</small>
+                                    </div>
+                                    <div>${slaIcon}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+            });
+            
+            const row = `
+                <tr class="${rowClass}">
+                    <td class="px-3 py-3 text-center border-r border-gray-200">
+                        <div class="flex items-center justify-center">
+                            ${rankIcon}
+                        </div>
+                    </td>
+                    <td class="px-3 py-3 border-r border-gray-200">
+                        <div class="font-bold text-blue-600">${team.username}</div>
+                        <small class="text-gray-500">${team.host_ip || ''}</small>
+                    </td>
+                    <td class="px-3 py-3 text-center border-r border-gray-200">
+                        <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-600 text-white">${team.total_points.toFixed(0)}</span>
+                    </td>
+                    <td class="px-3 py-3 text-center border-r border-gray-200">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-fire text-red-500 mr-1"></i>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">${team.attack_points.toFixed(0)}</span>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-blue-500 mr-1"></i>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">${team.defense_points.toFixed(0)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    ${challengeDetails}
+                </tr>
+            `;
+            
+            tbody.append(row);
+        });
+    }
+    
+    // Update statistics cards
+    function updateStatistics(teams) {
+        const totalTeams = teams.length;
+        const totalAttacks = teams.reduce((sum, team) => sum + (team.attack_points || 0), 0);
+        const highestScore = teams.length > 0 ? teams[0].total_points : 0;
+        
+        // Count services UP
+        let servicesUp = 0;
+        teams.forEach(team => {
+            if (team.sla) {
+                Object.values(team.sla).forEach(status => {
+                    if (status === 'UP') servicesUp++;
+                });
+            }
+        });
+        
+        // Update stat cards if they exist
+        const statCards = $('.stat-card .stat-number');
+        if (statCards.length >= 4) {
+            statCards.eq(0).text(totalTeams);
+            statCards.eq(1).text(totalAttacks.toFixed(0));
+            statCards.eq(2).text(highestScore.toFixed(0));
+            statCards.eq(3).text(servicesUp);
+        }
+    }
+    
+    // Auto-refresh functionality
+    function startAutoRefresh() {
+        // Refresh every 30 seconds
+        refreshInterval = setInterval(() => {
+            fetchScoreboardData();
+        }, 30000);
+    }
+    
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    }
+    
+    // Initialize
+    fetchScoreboardData(); // Enable live data fetching
+    startAutoRefresh();
+    
+    // Cleanup on page unload
+    $(window).on('beforeunload', function() {
+        stopAutoRefresh();
+    });
+    
+    // Manual refresh button (if needed)
+    $(document).on('click', '#refreshButton', function() {
+        fetchScoreboardData();
+    });
+});
+</script>
+
+<style>
+/* Scoreboard specific styles */
+.scoreboard-table {
+    font-size: 0.9rem;
+}
+
+.scoreboard-table th {
+    font-weight: 600;
+}
+
+.scoreboard-table td {
+    vertical-align: middle;
+}
+
+.challenge-header {
+    white-space: nowrap;
+}
+
+.challenge-details .bg-white {
+    font-size: 0.8rem;
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 3rem 1rem;
+}
+
+.empty-state i {
+    opacity: 0.6;
+}
+
+/* Challenge card hover effects */
+.challenge-details .bg-white {
+    transition: all 0.2s ease;
+}
+
+.challenge-details .bg-white:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Flash messages -->
+    <script>
+        $(document).ready(function() {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    var flashMessages = [
+                        {% for category, message in messages %}
+                            ["{{ category }}", "{{ message }}"],
+                        {% endfor %}
+                    ];
+                    
+                    flashMessages.forEach(function(flash) {
+                        var category = flash[0];
+                        var message = flash[1];
+                        
+                        var alertDiv = $('<div class="fixed top-20 right-4 z-50 max-w-sm bg-white border border-gray-200 rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 ' + getAlertClass(category) + '">' +
+                                            '<div class="flex items-center justify-between">' +
+                                                '<span>' + message + '</span>' +
+                                                '<button class="ml-3 text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.remove()">' +
+                                                    '<i class="fas fa-times"></i>' +
+                                                '</button>' +
+                                            '</div>' +
+                                        '</div>');
+                        
+                        $('body').append(alertDiv);
+
+                        // Animate showing
+                        setTimeout(function() {
+                            alertDiv.removeClass('translate-x-full');
+                        }, 100);
+
+                        // Auto-hide after 5 seconds
+                        setTimeout(function() {
+                            alertDiv.addClass('translate-x-full');
+                            setTimeout(function() {
+                                alertDiv.remove();
+                            }, 300);
+                        }, 5000);
+                    });
+                {% endif %}
+            {% endwith %}
+        });
+
+        function getAlertClass(category) {
+            switch(category) {
+                case 'info':
+                    return 'border-blue-200 bg-blue-50 text-blue-800';
+                case 'success':
+                    return 'border-green-200 bg-green-50 text-green-800';
+                case 'warning':
+                    return 'border-yellow-200 bg-yellow-50 text-yellow-800';
+                case 'danger':
+                    return 'border-red-200 bg-red-50 text-red-800';
+                default:
+                    return 'border-gray-200 bg-gray-50 text-gray-800';
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      SQLALCHEMY_DATABASE_URI: mysql+pymysql://${MYSQL_USER:-adctf_user}:${MYSQL_PASSWORD:-adctf_password}@db:3306/${MYSQL_DATABASE:-adctf}
+      SQLALCHEMY_TRACK_MODIFICATIONS: ${SQLALCHEMY_TRACK_MODIFICATIONS:-False}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      REDIS_URL: redis://redis:6379/${REDIS_DB:-0}
+      # Database connection variables for entrypoint script
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-adctf_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-adctf_password}
+      DB_NAME: ${MYSQL_DATABASE:-adctf}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-adctf}
+      MYSQL_USER: ${MYSQL_USER:-adctf_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-adctf_password}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD:-root_password} && mysql -u root -p${MYSQL_ROOT_PASSWORD:-root_password} -e 'SELECT 1' ${MYSQL_DATABASE:-adctf}"]
+      timeout: 30s
+      retries: 20
+      interval: 10s
+      start_period: 90s
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      retries: 5
+      interval: 10s
+
+volumes:
+  mysql_data:
+  redis_data:

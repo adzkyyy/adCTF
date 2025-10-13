@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>adCTF</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation Bar -->
+    {% include 'components/navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="flex items-center justify-center bg-gray-50" style="height: 80vh;">
+            <div class="text-center">
+                <!-- Logo/Title -->
+                <h1 class="text-7xl font-bold text-gray-900 mb-6">adCTF.</h1>
+                
+                <!-- Simple text -->
+                <p class="text-xl text-gray-600">A modern Attack Defense CTF Platform</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Flash messages -->
+    <script>
+        $(document).ready(function() {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    var flashMessages = [
+                        {% for category, message in messages %}
+                            ["{{ category }}", "{{ message }}"],
+                        {% endfor %}
+                    ];
+                    
+                    flashMessages.forEach(function(flash) {
+                        var category = flash[0];
+                        var message = flash[1];
+                        
+                        var alertDiv = $('<div class="fixed top-20 right-4 z-50 max-w-sm bg-white border border-gray-200 rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 ' + getAlertClass(category) + '">' +
+                                            '<div class="flex items-center justify-between">' +
+                                                '<span>' + message + '</span>' +
+                                                '<button class="ml-3 text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.remove()">' +
+                                                    '<i class="fas fa-times"></i>' +
+                                                '</button>' +
+                                            '</div>' +
+                                        '</div>');
+                        
+                        $('body').append(alertDiv);
+
+                        // Animate showing
+                        setTimeout(function() {
+                            alertDiv.removeClass('translate-x-full');
+                        }, 100);
+
+                        // Auto-hide after 5 seconds
+                        setTimeout(function() {
+                            alertDiv.addClass('translate-x-full');
+                            setTimeout(function() {
+                                alertDiv.remove();
+                            }, 300);
+                        }, 5000);
+                    });
+                {% endif %}
+            {% endwith %}
+        });
+
+        function getAlertClass(category) {
+            switch(category) {
+                case 'info':
+                    return 'border-blue-200 bg-blue-50 text-blue-800';
+                case 'success':
+                    return 'border-green-200 bg-green-50 text-green-800';
+                case 'warning':
+                    return 'border-yellow-200 bg-yellow-50 text-yellow-800';
+                case 'danger':
+                    return 'border-red-200 bg-red-50 text-red-800';
+                default:
+                    return 'border-gray-200 bg-gray-50 text-gray-800';
+            }
+        }
+    </script>
+
+</body>
+</html>

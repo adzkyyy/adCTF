@@ -1,0 +1,92 @@
+<!-- Admin Navigation Component -->
+<nav class="bg-gray-900 shadow-lg border-b border-gray-700 h-16">
+    <div class="max-w-7xl mx-auto px-4 h-full">
+        <div class="flex justify-between items-center h-full">
+            <a href="{{ url_for('index') }}" class="flex items-center">
+                <span class="font-bold text-xl text-white">adCTF</span>
+            </a>
+            
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="{{ url_for('admin_index') }}" class="flex items-center text-gray-300 hover:text-white transition-colors">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </a>
+                <a href="{{ url_for('user') }}" class="flex items-center text-gray-300 hover:text-white transition-colors">
+                    <i class="fas fa-users mr-2"></i>Users
+                </a>
+                <a href="{{ url_for('challenges') }}" class="flex items-center text-gray-300 hover:text-white transition-colors">
+                    <i class="fas fa-flag mr-2"></i>Challenges
+                </a>
+                <a href="{{ url_for('view_config') }}" class="flex items-center text-gray-300 hover:text-white transition-colors">
+                    <i class="fas fa-cogs mr-2"></i>Config
+                </a>
+                
+                <!-- Admin User Dropdown -->
+                <div class="relative group">
+                    <button class="flex items-center text-gray-300 hover:text-white transition-colors">
+                        <i class="fas fa-user-shield mr-2"></i>{{ current_user.username | safe}}
+                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <a href="{{ url_for('change_password') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-lock mr-2"></i>Change Password
+                        </a>
+                        <a href="{{ url_for('public_index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-eye mr-2"></i>View Public Site
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 border-t border-gray-100">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile menu button -->
+            <div class="md:hidden">
+                <button type="button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white" id="mobile-menu-button">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-gray-800">
+            <a href="{{ url_for('admin_index') }}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
+                <i class="fas fa-home mr-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('user') }}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
+                <i class="fas fa-users mr-2"></i>Users
+            </a>
+            <a href="{{ url_for('challenges') }}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
+                <i class="fas fa-flag mr-2"></i>Challenges
+            </a>
+            <a href="{{ url_for('view_config') }}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
+                <i class="fas fa-cogs mr-2"></i>Config
+            </a>
+            <a href="{{ url_for('change_password') }}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
+                <i class="fas fa-lock mr-2"></i>Change Password
+            </a>
+            <a href="{{ url_for('public_index') }}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
+                <i class="fas fa-eye mr-2"></i>View Public Site
+            </a>
+            <a href="{{ url_for('logout') }}" class="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded border-t border-gray-600">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+});
+</script>

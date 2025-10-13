@@ -1,0 +1,941 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block title %}Challenge Management - adCTF{% endblock %}
+
+{% block additional_head %}
+<!-- SweetAlert library -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+/* Custom SweetAlert styling */
+.swal2-lg {
+    width: 600px !important;
+}
+
+.swal2-html-container {
+    text-align: left;
+}
+
+.form-label {
+    text-align: left;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Vanilla table controls styling */
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-controls .left-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.table-controls .right-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Length select styling */
+.length-select label {
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.length-select select {
+    border-radius: 0.5rem;
+    border: 2px solid #d1d5db;
+    padding: 0.625rem 2.5rem 0.625rem 0.875rem;
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-width: 80px;
+    transition: all 0.15s ease-in-out;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.length-select select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.length-select select:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Search filter styling */
+.search-filter label {
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.search-filter input[type="search"] {
+    border-radius: 0.5rem;
+    border: 2px solid #d1d5db;
+    padding: 0.625rem 1rem 0.625rem 2.5rem;
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%236b7280'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z' /%3e%3c/svg%3e");
+    background-position: left 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem 1.25rem;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+    width: 280px;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.search-filter input[type="search"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-filter input[type="search"]:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.search-filter input[type="search"]::placeholder {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Table info styling */
+.table-info {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* Pagination styling */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pagination button {
+    border-radius: 0.5rem;
+    padding: 0.625rem 1rem;
+    border: 2px solid #e5e7eb;
+    background-color: white;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.pagination button:hover:not(:disabled):not(.active) {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.pagination button.active {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.pagination button.active:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+    box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4);
+}
+
+.pagination button:disabled {
+    color: #cbd5e1;
+    cursor: not-allowed;
+    background-color: #f8fafc;
+    border-color: #f1f5f9;
+    box-shadow: none;
+}
+
+.pagination button:disabled:hover {
+    background-color: #f8fafc;
+    border-color: #f1f5f9;
+    color: #cbd5e1;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Enhanced table styling */
+.vanilla-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+.vanilla-table thead th {
+    background-color: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+    font-weight: 600;
+    color: #374151;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.vanilla-table thead th:hover {
+    background-color: #f3f4f6;
+}
+
+.vanilla-table thead th.sortable::after {
+    content: '↕️';
+    margin-left: 0.5rem;
+    opacity: 0.5;
+}
+
+.vanilla-table thead th.sort-asc::after {
+    content: '↑';
+    opacity: 1;
+}
+
+.vanilla-table thead th.sort-desc::after {
+    content: '↓';
+    opacity: 1;
+}
+
+.vanilla-table tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.vanilla-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.vanilla-table tbody tr.hidden {
+    display: none;
+}
+
+/* Empty state styling */
+.empty-table {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .table-controls .left-controls,
+    .table-controls .right-controls {
+        justify-content: center;
+    }
+    
+    .search-filter input[type="search"] {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .table-footer {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .pagination {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .pagination button {
+        margin: 0.125rem;
+        padding: 0.5rem 0.75rem;
+        min-width: 2rem;
+        height: 2rem;
+        font-size: 0.75rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="/admin" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-home mr-2"></i>Admin
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500">Challenge Management</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+            Challenge Management
+        </h1>
+        <p class="text-lg text-gray-600">Configure CTF Challenges and Services</p>
+    </div>
+    
+    {% include 'components/flash_messages.html' %}
+
+    <!-- Action Buttons -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div class="p-6">
+            <div class="flex flex-wrap gap-3">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center" id="addChallengeBtn">
+                    <i class="fas fa-plus mr-2"></i>Add New Challenge
+                </button>
+                <button class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center" id="importChallengesBtn">
+                    <i class="fas fa-upload mr-2"></i>Import Challenges
+                </button>
+                <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center" id="exportBtn">
+                    <i class="fas fa-download mr-2"></i>Export Challenges
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenges Table -->
+    <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+        <div class="bg-gray-800 text-white px-6 py-4">
+            <h5 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-list mr-2"></i>Challenges List
+            </h5>
+        </div>
+        <div class="p-6">
+            {% if challenges %}
+            <!-- Table Controls -->
+            <div class="table-controls">
+                <div class="left-controls">
+                    <div class="length-select">
+                        <label>
+                            Show
+                            <select id="lengthSelect">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            entries
+                        </label>
+                    </div>
+                </div>
+                <div class="right-controls">
+                    <div class="search-filter">
+                        <label>
+                            <input type="search" id="searchInput" placeholder="Search challenges...">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="vanilla-table" id="challengeTable">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="sortable px-4 py-3 text-left font-semibold text-gray-700 border-r border-gray-200" data-column="0">
+                                <i class="fas fa-hashtag mr-2"></i>Name
+                            </th>
+                            <th class="sortable px-4 py-3 text-left font-semibold text-gray-700 border-r border-gray-200" data-column="1">
+                                <i class="fas fa-heading mr-2"></i>Title
+                            </th>
+                            <th class="sortable px-4 py-3 text-center font-semibold text-gray-700 border-r border-gray-200" data-column="2">
+                                <i class="fas fa-network-wired mr-2"></i>Port
+                            </th>
+                            <th class="sortable px-4 py-3 text-left font-semibold text-gray-700 border-r border-gray-200" data-column="3">
+                                <i class="fas fa-align-left mr-2"></i>Description
+                            </th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-700" data-column="4">
+                                <i class="fas fa-cogs mr-2"></i>Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for challenge in challenges %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-4 py-3 border-r border-gray-200">
+                                <div class="font-semibold text-blue-600">{{ challenge.name }}</div>
+                            </td>
+                            <td class="px-4 py-3 border-r border-gray-200">
+                                <div class="font-medium text-gray-900">{{ challenge.title }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center border-r border-gray-200">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ challenge.port }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 border-r border-gray-200">
+                                <div class="text-gray-600 max-w-xs truncate">
+                                    {{ challenge.description[:100] }}{% if challenge.description|length > 100 %}...{% endif %}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-lg transition-colors duration-200 showBtn" 
+                                            data-challenge-id="{{ challenge.id }}"
+                                            data-challenge-name="{{ challenge.name }}"
+                                            data-challenge-title="{{ challenge.title }}"
+                                            data-challenge-port="{{ challenge.port }}"
+                                            data-challenge-description="{{ challenge.description }}"
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-lg transition-colors duration-200 deleteBtn" 
+                                            data-challenge-id="{{ challenge.id }}"
+                                            title="Delete Challenge">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Table Footer -->
+            <div class="table-footer">
+                <div class="table-info" id="tableInfo">
+                    Showing 1 to {{ challenges|length }} of {{ challenges|length }} entries
+                </div>
+                <div class="pagination" id="pagination">
+                    <!-- Pagination buttons will be generated by JavaScript -->
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <div class="empty-state">
+                    <i class="fas fa-flag text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-medium text-gray-600 mb-3">No challenges configured</h3>
+                    <p class="text-gray-500 mb-6">Add your first challenge to get started with the CTF.</p>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center mx-auto" id="addChallengeBtn2">
+                        <i class="fas fa-plus mr-2"></i>Add First Challenge
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+$(document).ready(function() {
+    // Vanilla table implementation with all features
+    let currentData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    let entriesPerPage = 10;
+    let sortColumn = -1;
+    let sortDirection = 'asc';
+
+    // Initialize table data from DOM
+    function initializeTableData() {
+        const rows = $('#challengeTable tbody tr');
+        currentData = [];
+        rows.each(function(index) {
+            const row = $(this);
+            const rowData = {
+                id: row.find('.showBtn').data('challenge-id'),
+                name: row.find('.showBtn').data('challenge-name'),
+                title: row.find('.showBtn').data('challenge-title'),
+                port: row.find('.showBtn').data('challenge-port'),
+                description: row.find('.showBtn').data('challenge-description'),
+                element: row,
+                cells: [
+                    row.find('td').eq(0).text().trim(),
+                    row.find('td').eq(1).text().trim(),
+                    row.find('td').eq(2).text().trim(),
+                    row.find('td').eq(3).text().trim(),
+                    'actions'
+                ]
+            };
+            currentData.push(rowData);
+        });
+        filteredData = [...currentData];
+        updateTable();
+    }
+
+    // Filter table data based on search
+    function filterData() {
+        const searchTerm = $('#searchInput').val().toLowerCase();
+        if (!searchTerm) {
+            filteredData = [...currentData];
+        } else {
+            filteredData = currentData.filter(row => 
+                row.cells.slice(0, 4).some(cell => 
+                    cell.toLowerCase().includes(searchTerm)
+                )
+            );
+        }
+        currentPage = 1;
+        updateTable();
+    }
+
+    // Sort table data
+    function sortData(columnIndex) {
+        if (columnIndex === 4) return; // Don't sort actions column
+        
+        if (sortColumn === columnIndex) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = columnIndex;
+            sortDirection = 'asc';
+        }
+
+        filteredData.sort((a, b) => {
+            let aVal = a.cells[columnIndex];
+            let bVal = b.cells[columnIndex];
+            
+            // Handle numeric sorting for port column
+            if (columnIndex === 2) {
+                aVal = parseInt(aVal) || 0;
+                bVal = parseInt(bVal) || 0;
+            } else {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
+            }
+
+            if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        updateTable();
+    }
+
+    // Update table display
+    function updateTable() {
+        const startIndex = (currentPage - 1) * entriesPerPage;
+        const endIndex = startIndex + entriesPerPage;
+        const pageData = filteredData.slice(startIndex, endIndex);
+
+        // Hide all rows first
+        $('#challengeTable tbody tr').addClass('hidden');
+
+        // Show only current page rows
+        pageData.forEach(rowData => {
+            rowData.element.removeClass('hidden');
+        });
+
+        // Update table info
+        const totalEntries = filteredData.length;
+        const showingStart = totalEntries > 0 ? startIndex + 1 : 0;
+        const showingEnd = Math.min(endIndex, totalEntries);
+        $('#tableInfo').text(`Showing ${showingStart} to ${showingEnd} of ${totalEntries} entries`);
+
+        // Update pagination
+        updatePagination();
+        
+        // Update sort headers
+        updateSortHeaders();
+    }
+
+    // Update pagination controls
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredData.length / entriesPerPage);
+        const pagination = $('#pagination');
+        pagination.empty();
+
+        if (totalPages <= 1) return;
+
+        // Previous button
+        const prevBtn = $(`<button ${currentPage === 1 ? 'disabled' : ''}>Previous</button>`);
+        prevBtn.click(() => {
+            if (currentPage > 1) {
+                currentPage--;
+                updateTable();
+            }
+        });
+        pagination.append(prevBtn);
+
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+
+        if (startPage > 1) {
+            const firstBtn = $('<button>1</button>');
+            firstBtn.click(() => {
+                currentPage = 1;
+                updateTable();
+            });
+            pagination.append(firstBtn);
+
+            if (startPage > 2) {
+                pagination.append('<button disabled>...</button>');
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = $(`<button ${i === currentPage ? 'class="active"' : ''}>${i}</button>`);
+            pageBtn.click(() => {
+                currentPage = i;
+                updateTable();
+            });
+            pagination.append(pageBtn);
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                pagination.append('<button disabled>...</button>');
+            }
+
+            const lastBtn = $(`<button>${totalPages}</button>`);
+            lastBtn.click(() => {
+                currentPage = totalPages;
+                updateTable();
+            });
+            pagination.append(lastBtn);
+        }
+
+        // Next button
+        const nextBtn = $(`<button ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`);
+        nextBtn.click(() => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateTable();
+            }
+        });
+        pagination.append(nextBtn);
+    }
+
+    // Update sort headers
+    function updateSortHeaders() {
+        $('#challengeTable thead th').removeClass('sort-asc sort-desc');
+        if (sortColumn !== -1) {
+            const header = $(`#challengeTable thead th[data-column="${sortColumn}"]`);
+            header.addClass(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+    }
+
+    // Event handlers
+    $('#lengthSelect').change(function() {
+        entriesPerPage = parseInt($(this).val());
+        currentPage = 1;
+        updateTable();
+    });
+
+    $('#searchInput').on('input', filterData);
+
+    $('#challengeTable thead th.sortable').click(function() {
+        const columnIndex = parseInt($(this).data('column'));
+        sortData(columnIndex);
+    });
+
+    // Initialize table if data exists
+    if ($('#challengeTable tbody tr').length > 0) {
+        initializeTableData();
+    }
+
+    // Add challenge button handlers
+    $('#addChallengeBtn, #addChallengeBtn2').click(function() {
+        Swal.fire({
+            title: '<i class="fas fa-plus mr-2"></i>Add New Challenge',
+            html: `
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Challenge Title</label>
+                    <input id="titleInput" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter challenge title">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Challenge Name</label>
+                    <input id="nameInput" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter challenge name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Port Number</label>
+                    <input id="portInput" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter port number">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Description</label>
+                    <textarea id="descriptionInput" class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="4" placeholder="Enter challenge description"></textarea>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-save mr-2"></i>Add Challenge',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancel',
+            showLoaderOnConfirm: true,
+            customClass: {
+                popup: 'swal2-lg'
+            },
+            preConfirm: () => {
+                const name = $('#nameInput').val();
+                const title = $('#titleInput').val();
+                const port = $('#portInput').val();
+                const description = $('#descriptionInput').val();
+                
+                if (!name || !title || !port) {
+                    Swal.showValidationMessage('Please fill in all required fields');
+                    return false;
+                }
+                
+                return $.ajax({
+                    url: '/admin/challenge',
+                    type: 'POST',
+                    data: {
+                        name: name,
+                        title: title,
+                        port: port,
+                        description: description
+                    }
+                }).fail(() => {
+                    Swal.showValidationMessage('Failed to add challenge');
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Challenge added successfully',
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        });
+    });
+
+    $('#importChallengesBtn').click(function() {
+        Swal.fire({
+            title: '<i class="fas fa-upload mr-2"></i>Import Challenges',
+            html: `
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Select JSON file</label>
+                    <input type="file" id="fileInput" class="w-full px-3 py-2 border border-gray-300 rounded-md" accept=".json">
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Upload a JSON file containing challenge configurations.
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-upload mr-2"></i>Upload',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancel',
+            preConfirm: () => {
+                const file = $('#fileInput')[0].files[0];
+                if (!file) {
+                    Swal.showValidationMessage('Please select a file');
+                    return false;
+                }
+                const formData = new FormData();
+                formData.append('file', file);
+                return $.ajax({
+                    url: '/admin/challenge/import',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                }).fail(() => {
+                    Swal.showValidationMessage('Failed to import challenges');
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Challenges imported successfully',
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        });
+    });
+
+    $('#exportBtn').click(function() {
+        Swal.fire({
+            title: 'Exporting...',
+            text: 'Preparing challenge export',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+                window.location.href = '/admin/challenge/export';
+                setTimeout(() => {
+                    Swal.close();
+                }, 2000);
+            }
+        });
+    });
+
+    $(document).on('click', '.deleteBtn', function() {
+        const challengeId = $(this).data('challenge-id');
+        Swal.fire({
+            title: '<i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>Are you sure?',
+            text: 'You will not be able to recover this challenge!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-trash mr-2"></i>Yes, delete it!',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/admin/challenge/' + challengeId,
+                    type: 'DELETE',
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: response,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Failed to delete challenge.',
+                            timer: 2000
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    $(document).on('click', '.showBtn', function() {
+        const challengeData = {
+            id: $(this).data('challenge-id'),
+            name: $(this).data('challenge-name'),
+            title: $(this).data('challenge-title'),
+            port: $(this).data('challenge-port'),
+            description: $(this).data('challenge-description')
+        };
+        Swal.fire({
+            title: '<i class="fas fa-eye mr-2"></i>Challenge Details',
+            html: `
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Challenge ID</label>
+                    <input type="text" id="id" value="${challengeData.id}" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Challenge Name</label>
+                    <input type="text" id="name" value="${challengeData.name}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Challenge Title</label>
+                    <input type="text" id="title" value="${challengeData.title}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Port Number</label>
+                    <input type="number" id="port" value="${challengeData.port}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-semibold text-gray-700">Description</label>
+                    <textarea id="description" class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="4">${challengeData.description}</textarea>
+                </div>
+            `,
+            showCancelButton: true,
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Close',
+            confirmButtonText: '<i class="fas fa-save mr-2"></i>Update',
+            showLoaderOnConfirm: true,
+            customClass: {
+                popup: 'swal2-lg'
+            },
+            preConfirm: () => {
+                const title = $('#title').val();
+                const name = $('#name').val();
+                const port = $('#port').val();
+                const description = $('#description').val();
+                
+                if (!name || !title || !port) {
+                    Swal.showValidationMessage('Please fill in all required fields');
+                    return false;
+                }
+                
+                return $.ajax({
+                    url: '/admin/challenge/' + challengeData.id,
+                    type: 'PUT',
+                    data: {
+                        title: title,
+                        name: name,
+                        port: port,
+                        description: description
+                    }
+                }).fail(() => {
+                    Swal.showValidationMessage('Failed to update challenge');
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Challenge updated successfully',
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

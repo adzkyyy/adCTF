@@ -1,0 +1,205 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block title %}System Configuration - adCTF{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="/admin" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-home mr-2"></i>Admin
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500">System Configuration</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+            System Configuration
+        </h1>
+        <p class="text-lg text-gray-600">CTF Competition Settings and Control Panel</p>
+    </div>
+    
+    {% include 'components/flash_messages.html' %}
+
+    <!-- Current Round Information -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden">
+        <div class="bg-blue-500 text-white px-6 py-4">
+            <h5 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>Current Round Information
+            </h5>
+        </div>
+        <div class="p-6">
+            {% if last_round %}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="stat-item p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        <div class="text-3xl font-bold text-blue-600 mb-1">{{ last_round.id }}</div>
+                        <div class="text-gray-600 text-sm">Current Round</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-item p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        <div class="text-xl font-bold text-green-600 mb-1">
+                            {{ last_round_start_time.strftime('%H:%M:%S') if last_round_start_time else 'N/A' }}
+                        </div>
+                        <div class="text-gray-600 text-sm">Last Round Change</div>
+                        <small class="text-gray-500 text-xs">{{ last_round_start_time.strftime('%Y-%m-%d') if last_round_start_time else '' }}</small>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-item p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        <div class="text-3xl font-bold text-yellow-600 mb-1">{{ last_tick.id }}</div>
+                        <div class="text-gray-600 text-sm">Current Tick</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-item p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        <div class="text-xl font-bold text-blue-500 mb-1">
+                            {{ last_tick_start_time.strftime('%H:%M:%S') if last_tick_start_time else 'N/A' }}
+                        </div>
+                        <div class="text-gray-600 text-sm">Last Tick Change</div>
+                        <small class="text-gray-500 text-xs">{{ last_tick_start_time.strftime('%Y-%m-%d') if last_tick_start_time else '' }}</small>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-6">
+                <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
+                <p class="text-gray-600">No round information available.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Competition Control -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden">
+        <div class="bg-gray-800 text-white px-6 py-4">
+            <h5 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-play-circle mr-2"></i>Competition Control
+            </h5>
+        </div>
+        <div class="p-6">
+            <div class="flex flex-wrap gap-3">
+                <form method="post" action="{{ url_for('update_config') }}" class="inline">
+                    {% if config.challenge_started %}
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center" name="challenge_started" value="false">
+                            <i class="fas fa-stop mr-2"></i>Stop Challenge
+                        </button>
+                    {% else %}
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center" name="challenge_started" value="true">
+                            <i class="fas fa-play mr-2"></i>Start Challenge
+                        </button>
+                    {% endif %}
+                </form>
+                <form method="post" action="{{ url_for('reset_challenge') }}" class="inline">
+                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center" onclick="return confirm('Are you sure you want to reset the challenge? This will clear all data!')">
+                        <i class="fas fa-redo mr-2"></i>Reset Challenge
+                    </button>
+                </form>
+                <form method="post" action="{{ url_for('manual_tick') }}" class="inline">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center">
+                        <i class="fas fa-clock mr-2"></i>Manual Tick
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Settings -->
+    <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+        <div class="bg-blue-600 text-white px-6 py-4">
+            <h5 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-cogs mr-2"></i>Competition Settings
+            </h5>
+        </div>
+        <div class="p-6">
+            <form method="post" action="{{ url_for('update_config') }}">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white border border-gray-300 rounded-lg overflow-hidden h-full">
+                        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                            <h6 class="text-base font-semibold text-blue-600 flex items-center">
+                                <i class="fas fa-hashtag mr-2"></i>Competition Tick
+                            </h6>
+                        </div>
+                        <div class="p-4">
+                            <label for="ticks_count" class="block text-sm font-medium text-gray-700 mb-2">Total Tick Count</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md text-lg focus:ring-blue-500 focus:border-blue-500" 
+                                   id="ticks_count" name="ticks_count" 
+                                   value="{{ config.ticks_count }}" 
+                                   placeholder="Total ticks in competition" required>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Total number of ticks for the competition
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-300 rounded-lg overflow-hidden h-full">
+                        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                            <h6 class="text-base font-semibold text-yellow-600 flex items-center">
+                                <i class="fas fa-clock mr-2"></i>Tick Duration
+                            </h6>
+                        </div>
+                        <div class="p-4">
+                            <label for="tick_duration_seconds" class="block text-sm font-medium text-gray-700 mb-2">Duration (seconds)</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md text-lg bg-gray-100" 
+                                   id="tick_duration_seconds" name="tick_duration_seconds" 
+                                   value="{{ config.tick_duration_seconds }}" 
+                                   placeholder="Seconds per tick" disabled>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <i class="fas fa-lock mr-1"></i>
+                                Duration cannot be changed during competition
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-300 rounded-lg overflow-hidden h-full">
+                        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                            <h6 class="text-base font-semibold text-green-600 flex items-center">
+                                <i class="fas fa-layer-group mr-2"></i>Round Structure
+                            </h6>
+                        </div>
+                        <div class="p-4">
+                            <label for="tick_per_round" class="block text-sm font-medium text-gray-700 mb-2">Ticks per Round</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md text-lg bg-gray-100" 
+                                   id="tick_per_round" name="tick_per_round" 
+                                   value="{{ config.tick_per_round }}" 
+                                   placeholder="Ticks per round" disabled>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <i class="fas fa-lock mr-1"></i>
+                                Round structure cannot be changed during competition
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium text-lg transition-colors duration-200 flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i>Update Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block additional_scripts %}
+<script>
+$(document).ready(function() {
+    // Auto-refresh every 30 seconds
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+});
+</script>
+{% endblock %}

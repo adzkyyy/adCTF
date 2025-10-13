@@ -1,0 +1,165 @@
+<!-- Navigation Component -->
+<nav class="bg-white shadow-sm border-b border-gray-200 h-16">
+    <div class="max-w-7xl mx-auto px-4 h-full">
+        <div class="flex justify-between items-center h-full">
+            <div class="flex items-center space-x-4">
+                <a href="{{ url_for('public_index') }}" class="flex items-center">
+                    <span class="font-bold text-xl text-gray-900">adCTF</span>
+                </a>
+                
+                <!-- Round and Tick Information -->
+                {% if current_user.is_authenticated and challenge_started %}
+                <div class="hidden sm:flex items-center space-x-4 text-sm">
+                    {% if total_rounds > 0 %}
+                        <div class="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                            <i class="fas fa-layer-group mr-1 text-xs"></i>
+                            <span class="font-medium">Round {{ current_round_num }}/{{ total_rounds }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if total_ticks > 0 %}
+                        <div class="flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full">
+                            <i class="fas fa-clock mr-1 text-xs"></i>
+                            <span class="font-medium">Tick {{ current_tick_num }}/{{ total_ticks }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if total_rounds == 0 and total_ticks == 0 %}
+                        <div class="flex items-center bg-gray-50 text-gray-500 px-3 py-1 rounded-full">
+                            <i class="fas fa-pause mr-1 text-xs"></i>
+                            <span class="font-medium">Not Configured</span>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="{{ url_for('public_index') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-home mr-2"></i>Home
+                </a>
+                <a href="{{ url_for('public_services') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-flag mr-2"></i>Challenges
+                </a>
+                <a href="{{ url_for('public_scoreboard') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-trophy mr-2"></i>Scoreboard
+                </a>
+                <a href="{{ url_for('public_api_docs') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-code mr-2"></i>API Docs
+                </a>
+                
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin_index') }}" class="flex items-center text-amber-600 hover:text-amber-700 transition-colors">
+                            <i class="fas fa-cogs mr-2"></i>Admin Panel
+                        </a>
+                    {% endif %}
+                    
+                    <!-- User Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-user mr-2"></i>{{ current_user.username | safe}}
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <a href="{{ url_for('change_password') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-lock mr-2"></i>Change Password
+                            </a>
+                            <a href="{{ url_for('logout') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 border-t border-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Mobile menu button -->
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+        <div class="px-4 py-2 space-y-1">
+            <!-- Mobile Round/Tick Info -->
+            {% if current_user.is_authenticated and challenge_started %}
+            <div class="flex items-center justify-center space-x-2 py-2 border-b border-gray-100 mb-2">
+                {% if total_rounds > 0 %}
+                    <div class="flex items-center bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
+                        <i class="fas fa-layer-group mr-1"></i>
+                        <span class="font-medium">Round {{ current_round_num }}/{{ total_rounds }}</span>
+                    </div>
+                {% endif %}
+                
+                {% if total_ticks > 0 %}
+                    <div class="flex items-center bg-green-50 text-green-700 px-2 py-1 rounded text-xs">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span class="font-medium">Tick {{ current_tick_num }}/{{ total_ticks }}</span>
+                    </div>
+                {% endif %}
+                
+                {% if total_rounds == 0 and total_ticks == 0 %}
+                    <div class="flex items-center bg-gray-50 text-gray-500 px-2 py-1 rounded text-xs">
+                        <i class="fas fa-pause mr-1"></i>
+                        <span class="font-medium">Not Configured</span>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <a href="{{ url_for('public_index') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded">
+                <i class="fas fa-home mr-2"></i>Home
+            </a>
+            <a href="{{ url_for('public_services') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded">
+                <i class="fas fa-flag mr-2"></i>Challenges
+            </a>
+            <a href="{{ url_for('public_scoreboard') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded">
+                <i class="fas fa-trophy mr-2"></i>Scoreboard
+            </a>
+            <a href="{{ url_for('public_api_docs') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded">
+                <i class="fas fa-code mr-2"></i>API Docs
+            </a>
+            
+            {% if current_user.is_authenticated %}
+                {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin_index') }}" class="block px-3 py-2 text-amber-600 hover:bg-gray-50 rounded">
+                        <i class="fas fa-cogs mr-2"></i>Admin Panel
+                    </a>
+                {% endif %}
+                <a href="{{ url_for('change_password') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded">
+                    <i class="fas fa-lock mr-2"></i>Change Password
+                </a>
+                <a href="{{ url_for('logout') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded border-t border-gray-100">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<script>
+    // Mobile menu toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    });
+</script>
