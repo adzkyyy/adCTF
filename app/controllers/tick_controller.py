@@ -160,7 +160,7 @@ def next_tick():
                 for user in users:
                     try:
                         flag_value = ''.join(random.choices(string.ascii_letters + string.digits, k=64))
-                        flag_string = 'flag{' + flag_value + '}'  # Format the flag as required
+                        flag_string = os.getenv('FLAG_FORMAT', 'flag') + '{' + flag_value + '}'  # Format the flag as required
                         flag_distribution_url = 'http://' + user.host_ip + '/flag'
                         
                         response = requests.post(flag_distribution_url, 
@@ -177,7 +177,7 @@ def next_tick():
                             round_id=new_round_id,
                             user_id=user.id,
                             chall_id=challenge.id,
-                            string=flag_value
+                            string=flag_string
                         )
                         db.session.add(flag)
                     except requests.RequestException as e:
