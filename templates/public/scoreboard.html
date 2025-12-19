@@ -255,7 +255,7 @@ $(document).ready(function() {
     // Update scoreboard table with new data
     function updateScoreboardTable(data) {
         // Sort data by total points
-        const sortedData = data.sort((a, b) => b.total_points - a.total_points);
+        const sortedData = [...data].sort((a, b) => b.total_points - a.total_points);
         
         // Extract unique challenge names
         const challengeNames = new Set();

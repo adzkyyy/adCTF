@@ -83,6 +83,8 @@ def get_scoreboard():
 
             scoreboard.append(user_scores)
 
+        scoreboard.sort(key=lambda x: x['total_points'], reverse=True)
+
         return jsonify(scoreboard), 200
     
     except Exception as e:
@@ -167,6 +169,8 @@ def get_public_scoreboard():
             user_scores["defense_points"] = defense_points
 
             scoreboard.append(user_scores)
+            
+        scoreboard.sort(key=lambda x: x['total_points'], reverse=True)
 
         return jsonify(scoreboard), 200
     

@@ -157,6 +157,7 @@ def public_scoreboard():
                 user_scores["defense_points"] = defense_points
 
                 scoreboard_data.append(user_scores)
+            scoreboard_data.sort(key=lambda x: x['total_points'], reverse=True)
         except Exception as e:
             print(f"Error loading initial scoreboard data: {e}")
     
